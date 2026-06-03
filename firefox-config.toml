@@ -1,0 +1,14 @@
+[server]
+port = 5556
+
+[node]
+detect-drivers = false
+max-sessions = 1
+
+
+[[node.driver-configuration]]
+display-name = "Firefox"
+stereotype = '{"browserName":"firefox"}'
+max-sessions = 1
+
+[relay]

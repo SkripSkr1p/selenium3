@@ -1,0 +1,10 @@
+[node]
+detect-drivers = false
+max-sessions = 1
+
+[[node.driver-configuration]]
+display-name = "Chrome"
+stereotype = '{"browserName":"chrome"}'
+max-sessions = 1
+
+[relay]
