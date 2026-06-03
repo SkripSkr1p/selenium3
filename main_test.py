@@ -105,3 +105,6 @@ def test_failed_authorization(main_page):
         assert error.is_displayed()
     except TimeoutException:
         pytest.fail("Не отобразилось сообщение об ошибке при неудачной авторизации")
+@pytest.mark.taiga
+def test_taiga(main_page):
+    assert False

@@ -5,6 +5,9 @@ import string
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+import os
+import time
+import requests
 
 from pages.main_page import MainPage
 from pages.registration_page import RegistrationPage
@@ -21,6 +24,81 @@ def generate_a_email(min_a=1, max_a=30, domain="gmail.com"):
     name = 'g' * random.randint(min_a, max_a)
     return f"{name}@{domain}"
 
+TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwNTI3Njg3LCJqdGkiOiJmNjFkYTQ0NTc0Y2I0MzZlOTcwOGMwMWFlODJmNDNlYiIsInVzZXJfaWQiOjkzOTc3N30.DM9NIfkoe-khhay3DkLUDKV-7ujQaKN6cJ17pjofyd4p1nY6ALMmaSBpkWB5gVWjZRVMp-Ln8DH1JMNYa9gCCvXtzz1k4ImH3mV1XuuIwDQj_PFT5IqXqE9gA2Ah_B13vHpkvbwrwPldqzUhlxDUHOo3_erWP9OsClQNp9HjfQ7Q-p1drR71tKoNL-nV7dFxtlwTS4Y3u89_NyWIN3zHZNMx1fX95SR6yhs-IKNXDkxZhK2TjAkOoehBQp9lk7L7TJu-jBDUNGmvBt-PAAjNbSFTlJ3uTyygdJwKTmjAr5_7Wcn8TASQ-9ObpFk4xizWpGJ1T2R-saMzzQUDi5dQXA"
+PROJECT_ID = 1794247
+PRIORITY_ID = 5386321
+SEVERITY_ID = 8965835
+STATUS_ID = 12560224
+TYPE_ID = 5398771
+
+def upload_attachment(issue_id, file_path):
+    headers = {
+        "Authorization": f"Bearer {TOKEN}"
+    }
+
+    with open(file_path, "rb") as f:
+        files = {
+            "attached_file": (
+                os.path.basename(file_path),
+                f,
+                "image/png"
+            )
+        }
+
+        data = {
+            "object_id": issue_id,
+            "content_type": "issues.issue"
+        }
+
+        r = requests.post(
+            "https://api.taiga.io/api/v1/attachments",
+            headers=headers,
+            files=files,
+            data=data
+        )
+
+    print("UPLOAD STATUS:", r.status_code)
+    print("UPLOAD RESPONSE:", r.text)
+
+    return r
+
+def create_taiga_issue(subject, description, screenshot=None):
+
+    headers = {
+        "Authorization": f"Bearer {TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "project": PROJECT_ID,
+        "subject": subject,
+        "description": description,
+        "priority": PRIORITY_ID,
+        "severity": SEVERITY_ID,
+        "status": STATUS_ID,
+        "type": TYPE_ID
+    }
+
+    r = requests.post(
+        "https://api.taiga.io/api/v1/issues",
+        headers=headers,
+        json=payload
+    )
+
+    print("TAIGA STATUS:", r.status_code)
+    print("TAIGA RESPONSE:", r.text)
+
+    data = r.json()
+
+    # ❗ защита от краша
+    if "id" not in data:
+        print("❌ Issue not created, skipping attachment")
+        return data
+
+    if screenshot:
+        upload_attachment(data["id"], screenshot)
+
+    return data
 
 # ---------- Fixtures ----------
 @pytest.fixture(scope="function")
@@ -85,3 +163,37 @@ def authorized_user(browser):
     login_page.login(email)
 
     return main_page
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+
+    outcome = yield
+    report = outcome.get_result()
+
+    if report.when != "call" or not report.failed:
+        return
+
+    browser = item.funcargs.get("browser")
+
+    if browser is None:
+        print("❌ NO BROWSER IN FUNCARGS")
+        return
+
+    try:
+        os.makedirs("screenshots", exist_ok=True)
+
+        screenshot = f"screenshots/{item.name}_{time.strftime('%Y%m%d-%H%M%S')}.png"
+
+        # 🔥 ДОБАВЬ ЖЁСТКИЙ ФОКУС НА СТАБИЛЬНЫЙ СКРИН
+        browser.save_screenshot(screenshot)
+
+        print("📸 SCREENSHOT SAVED:", screenshot)
+
+        create_taiga_issue(
+            subject=f"FAILED: {item.name}",
+            description=report.longreprtext,
+            screenshot=screenshot
+        )
+
+    except Exception as e:
+        print("❌ SCREENSHOT ERROR:", str(e))
