@@ -24,7 +24,7 @@ def generate_a_email(min_a=1, max_a=30, domain="gmail.com"):
     name = 'g' * random.randint(min_a, max_a)
     return f"{name}@{domain}"
 
-TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwNTI3Njg3LCJqdGkiOiJmNjFkYTQ0NTc0Y2I0MzZlOTcwOGMwMWFlODJmNDNlYiIsInVzZXJfaWQiOjkzOTc3N30.DM9NIfkoe-khhay3DkLUDKV-7ujQaKN6cJ17pjofyd4p1nY6ALMmaSBpkWB5gVWjZRVMp-Ln8DH1JMNYa9gCCvXtzz1k4ImH3mV1XuuIwDQj_PFT5IqXqE9gA2Ah_B13vHpkvbwrwPldqzUhlxDUHOo3_erWP9OsClQNp9HjfQ7Q-p1drR71tKoNL-nV7dFxtlwTS4Y3u89_NyWIN3zHZNMx1fX95SR6yhs-IKNXDkxZhK2TjAkOoehBQp9lk7L7TJu-jBDUNGmvBt-PAAjNbSFTlJ3uTyygdJwKTmjAr5_7Wcn8TASQ-9ObpFk4xizWpGJ1T2R-saMzzQUDi5dQXA"
+TOKEN = "token"
 PROJECT_ID = 1794247
 PRIORITY_ID = 5386321
 SEVERITY_ID = 8965835
